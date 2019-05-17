@@ -1,7 +1,7 @@
 {
-  "name": "init",
+  "name": "tees-init",
   "version": "1.0.0-alpha.11",
-  "description": "a CLI of tees",
+  "description": "a CLI for tees project init",
   "main": "src/index.js",
   "bin": {
     "tees": "bin/init.js"
@@ -16,8 +16,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "chalk": "^2.4.2",
     "commander": "^2.20.0",
-    "init-package-json": "^1.10.3"
+    "inquirer": "^6.3.1"
   }
 }

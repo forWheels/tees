@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const init = require('init-package-json')
+const inquirer = require('inquirer');
 
 function compile({
   keys,
@@ -20,33 +20,32 @@ function ensureDirSync (dirPath) {
   }
 }
 
-function initPackageJson(initPath, config) {
-  return new Promise((resolve, reject)=> {
-    console.log('configData', config);
-    const initFile = path.join(__dirname, '../npm-init.js');
-    console.log('initFile', initFile);
-    init(initPath, 'file that does not exist', config, function (err, data) {
-      if (!err) {
-        console.log('package.json init successfully');
-        resolve(data);
-      } else {
-        reject();
+async function getPromptAnswers() {
+    const answers = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'projectVersion',
+        message: 'project version:',
+        default: '1.0.0',
+      },
+      {
+          type: 'input',
+          name: 'description',
+          message: 'description:',
+      },
+      {
+        type: 'input',
+        name: 'license',
+        message: 'license:',
+        default: 'MIT',
       }
-    })
-  })
+    ]);
+    return answers;
 }
 
-async function run(projectName, cmd) {
-    console.log('projectName', projectName);
+async function run(projectName,  cmd) {
     ensureDirSync(path.join(process.cwd(), projectName));
     ensureDirSync(path.join(process.cwd(), `${projectName}/src`));
-    const config = {
-      name: projectName,
-      dependencies: {tees: '1.0.2'},
-      description: "a test aaaa"
-    }
-    const packageJson = await initPackageJson(path.join(process.cwd(), projectName), config);
-    console.log('packageJson', packageJson);
     fs.readFile(path.join(__dirname, './e2eConfigTemplate.js'), 'utf-8', async (err, data) => {
       template = data.toString();
       const configObj = {
@@ -64,20 +63,20 @@ async function run(projectName, cmd) {
 
     fs.readFile(path.join(__dirname, './packageTemplate.js'), 'utf-8', async (err, data) => {
       template = data.toString();
+      const promptAnswers = await getPromptAnswers();
       const packageObj = {
         projectName,
-        projectVersion,
-        description,
-        mainFile,
-        teesVersion,
-        license
+        mainFile : 'index.js',
+        teesVersion : "^1.0.0-alpha.31",
+        ...promptAnswers
       }
+      
       const result = compile({
         template,
         keys: Object.keys(packageObj),
         values: Object.values(packageObj),
       });
-      fs.writeFile(path.join(process.cwd(), `${projectName}/e2e.config.js`), result, 'ascii', (err) => {
+      fs.writeFile(path.join(process.cwd(), `${projectName}/package.json`), result, 'ascii', (err) => {
         if (err) throw new Error(err);
       });
     });
